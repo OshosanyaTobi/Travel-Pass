@@ -669,11 +669,20 @@ namespace TravelPass
 
         private void search_btn_Click(object sender, EventArgs e)
         {
+            string query = search_box.Text.Trim();
+
+            if (AISearchEngine.IsNaturalLanguageQuery(query))
+            {
+                RunAISearch(query);
+                return;
+            }
+
+            // Standard column-based filter over the already-loaded grid rows.
             foreach (System.Windows.Forms.DataGridViewRow r in recordsDataGrid.Rows)
             {
                 var x = r.Cells[getItemIndex(record_combo.Text.Trim().ToString().ToLower())].Value;
 
-                if (x != null && x.ToString().Trim().ToUpper().Contains(search_box.Text.Trim().ToUpper()))
+                if (x != null && x.ToString().Trim().ToUpper().Contains(query.ToUpper()))
                 {
                     recordsDataGrid.Rows[r.Index].Visible = true;
                     recordsDataGrid.Rows[r.Index].Selected = true;
@@ -684,14 +693,72 @@ namespace TravelPass
                     try
                     {
                         recordsDataGrid.Rows[r.Index].Visible = false;
-
                     }
                     catch (Exception)
                     {
-
                         //throw;
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Parses <paramref name="query"/> as natural language and searches all
+        /// flight records under the Flights root folder.  Results are bound
+        /// directly to the grid, replacing the current view.
+        /// </summary>
+        private void RunAISearch(string query)
+        {
+            try
+            {
+                // Derive the Flights root from the current baseFolderPathString.
+                // baseFolderPathString is a specific flight folder such as
+                // c:\Travelpass\Flights\VS652_20241215 – going one level up gives
+                // c:\Travelpass\Flights which contains all flights.
+                string cleanedBase = baseFolderPathString
+                    .Replace("\"", "")
+                    .Trim();
+
+                string flightsRoot = System.IO.Directory.GetParent(cleanedBase) != null
+                    ? System.IO.Directory.GetParent(cleanedBase).FullName
+                    : cleanedBase;
+
+                SearchCriteria criteria = AISearchEngine.ParseQuery(query);
+                System.Collections.Generic.List<AISearchResult> results =
+                    AISearchEngine.Search(criteria, flightsRoot);
+
+                if (results.Count == 0)
+                {
+                    DialogResult dr = MessageBox.Show(
+                        "No records matched your search: \"" + query + "\"",
+                        "Smart Search",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information,
+                        MessageBoxDefaultButton.Button1,
+                        MessageBoxOptions.RightAlign,
+                        false);
+
+                    if (dr == DialogResult.OK)
+                        return;
+                }
+
+                System.Data.DataTable dt = AISearchEngine.ToDataTable(results);
+                ContinueFlightList.table      = dt;
+                recordsDataGrid.DataSource    = dt;
+                recordsDataGrid.AutoResizeColumns(
+                    System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("AISearch error: " + ex.ToString());
+                MessageBox.Show(
+                    "Smart search encountered an error. Please try a simpler query.",
+                    "Smart Search Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning,
+                    MessageBoxDefaultButton.Button1,
+                    MessageBoxOptions.RightAlign,
+                    false);
             }
         }
 

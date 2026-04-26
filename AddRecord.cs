@@ -18,6 +18,10 @@ namespace TravelPass
         bool btnSV_checks = false;
         bool btnSV_valid = false;
         Hashtable hashtable = new Hashtable();
+
+        // Post-dated visa detection state (reset on each Clear).
+        bool isPostDated = false;
+        DateTime visaStartDate = DateTime.MinValue;
         
 
         string signed_attrs = "NO READ DATA";
@@ -339,6 +343,32 @@ namespace TravelPass
                                     {
                                         mrzScan1.flagged_flag.Text = "NO";
                                         mrzScan1.flagged_flag.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(140)))), ((int)(((byte)(0)))));
+                                    }
+                                }
+
+                                // Post-dated visa detection: attempt to extract a validity
+                                // start date from the MRZ optional data field and flag the
+                                // document if the start date lies in the future.
+                                if (PostDatedVisaDetector.IsVisaDocType(this.doc_type.Text))
+                                {
+                                    DateTime detectedStart;
+                                    if (PostDatedVisaDetector.TryExtractStartDate(
+                                            mrzScan1.opt_data.Text, out detectedStart))
+                                    {
+                                        visaStartDate = detectedStart;
+                                        isPostDated   = PostDatedVisaDetector.IsPostDated(detectedStart);
+                                        string statusText = PostDatedVisaDetector.GetStatusText(detectedStart);
+
+                                        if (isPostDated)
+                                        {
+                                            mrzScan1.expired_txt.Text      = statusText;
+                                            mrzScan1.expired_txt.ForeColor = System.Drawing.Color.FromArgb(192, 0, 0);
+                                        }
+                                        else if (detectedStart != DateTime.MinValue)
+                                        {
+                                            mrzScan1.expired_txt.Text      = statusText;
+                                            mrzScan1.expired_txt.ForeColor = System.Drawing.Color.FromArgb(0, 140, 0);
+                                        }
                                     }
                                 }
 
@@ -1976,6 +2006,9 @@ namespace TravelPass
             mrzScan1.expired_txt.Text = "";
             mrzScan1.age.Text = "";
 
+            isPostDated   = false;
+            visaStartDate = DateTime.MinValue;
+
             timer2.Stop();
             timer3.Stop();
             mrzScan1.showVerification.BackColor = Color.White;
@@ -2812,7 +2845,7 @@ namespace TravelPass
                     string visaDetailsPathString = System.IO.Path.Combine(visaFolderPathString, "Visa Validation Details.travlr");
                     string[] vlines = {"***Visa Validation Details***",
                         "Passport Number = " + mrzScan1.doc_no.Text.ToString(),
-                        "Passed = " + PassportPassedVerified(),
+                        "Passed = " + (PassportPassedVerified() && !isPostDated),
                         "Document No = " + mrzScan1.doc_no_flag.Text.ToString(),
                         "Date of birth = " + mrzScan1.dob_flag.Text.ToString(),
                         "Date of expiry = " + mrzScan1.doe_flag.Text.ToString(),
@@ -2821,7 +2854,9 @@ namespace TravelPass
                         "Global CheckSum = " + mrzScan1.checks_flag.Text.ToString(),
                         "P Codeline Match = " + mrzScan1.cdm_flag.Text.ToString(),
                         "RFID availability = " + mrzScan1.rfid_flag.Text.ToString(),
-                        "isFlagged = " + isPersonnelFlagged(mrzScan1.flagged_flag.Text.Trim().ToString()) /**need to still get back here**/
+                        "isFlagged = " + isPersonnelFlagged(mrzScan1.flagged_flag.Text.Trim().ToString()),
+                        "Visa Start Date = " + (visaStartDate != DateTime.MinValue ? visaStartDate.ToString("dd MMM yyyy") : "UNKNOWN"),
+                        "isPostDated = " + isPostDated
                     };
                     using (System.IO.StreamWriter file =
                         new System.IO.StreamWriter(visaDetailsPathString))
@@ -3512,7 +3547,7 @@ namespace TravelPass
                     string visaDetailsPathString = System.IO.Path.Combine(visaFolderPathString, "Visa Validation Details.travlr");
                     string[] vlines = {"***Visa Validation Details***",
                             "Passport Number = " + mrzScan1.doc_no.Text.ToString(),
-                            "Passed = " + PassportPassedVerified(),
+                            "Passed = " + (PassportPassedVerified() && !isPostDated),
                             "Document No = " + mrzScan1.doc_no_flag.Text.ToString(),
                             "Date of birth = " + mrzScan1.dob_flag.Text.ToString(),
                             "Date of expiry = " + mrzScan1.doe_flag.Text.ToString(),
@@ -3521,7 +3556,9 @@ namespace TravelPass
                             "Global CheckSum = " + mrzScan1.checks_flag.Text.ToString(),
                             "P Codeline Match = " + mrzScan1.cdm_flag.Text.ToString(),
                             "RFID availability = " + mrzScan1.rfid_flag.Text.ToString(),
-                            "isFlagged = " + isPersonnelFlagged(mrzScan1.flagged_flag.Text.Trim().ToString()) /**need to still get back here**/
+                            "isFlagged = " + isPersonnelFlagged(mrzScan1.flagged_flag.Text.Trim().ToString()),
+                            "Visa Start Date = " + (visaStartDate != DateTime.MinValue ? visaStartDate.ToString("dd MMM yyyy") : "UNKNOWN"),
+                            "isPostDated = " + isPostDated
                     };
                     using (System.IO.StreamWriter file =
                         new System.IO.StreamWriter(visaDetailsPathString))
