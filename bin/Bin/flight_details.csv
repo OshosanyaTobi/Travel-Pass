@@ -1,0 +1,5 @@
+﻿"s/n","airline","flight_number","flight_from","country_from","dept_time","dept_term","flight_to","country_to","arrive_time","arrive_term","aircraft_type","length(hrs)"
+"1", "Virgin Atlantic Airways-VS", "VS652", "LOS-Murtala Muhammed International Airport", "Nigeria", "10:05", "LOS", "LHR-London Heathrow Airport", "United Kingdom", "16:05", "LHR3", "Airbus A340-600", "6"
+"2", "Royal Air Maroc-AT", "AT554", "LOS-Murtala Muhammed International Airport", "Nigeria", "06:30", "LOS", "CMN-Mohammed V International Airport", "Morocco", "11:30", "MAR", "Boeing 737-800", "5"
+"3", "Virgin Atlantic Airways-VS", "VS412", "LOS-Murtala Muhammed International Airport", "Nigeria", "10:05", "LOS", "LHR-London Heathrow Airport", "United Kingdom", "16:05", "LHR3", "Airbus A330-300", "6"
+"4", "Virgin Atlantic Airways-VS", "VS412(2)", "LOS-Murtala Muhammed International Airport", "Nigeria", "10:05", "LOS", "LHR-London Heathrow Airport", "United Kingdom", "16:05", "LHR3", "Airbus A350-1000", "6"

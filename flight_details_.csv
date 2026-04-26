@@ -1,0 +1,2 @@
+﻿"s/n","airline","flight_number","flight_from","country_from","dept_time","dept_term","flight_to","country_to","arrive_time","arrive_term","aircraft_type","length(hrs)"
+"1", "Virgin Atlantic Airways-VS", "VS652", "LOS-Murtala Muhammed International Airport", "Nigeria", "10:05", "LOS", "LHR-London Heathrow Airport", "United Kingdom", "16:05", "LHR3", "Airbus A340-600", "6"
