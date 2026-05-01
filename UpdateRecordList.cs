@@ -703,63 +703,71 @@ namespace TravelPass
         }
 
         /// <summary>
-        /// Parses <paramref name="query"/> as natural language and searches all
-        /// flight records under the Flights root folder.  Results are bound
-        /// directly to the grid, replacing the current view.
+        /// Parses <paramref name="query"/> via Ollama and searches all flight
+        /// records under the Flights root folder.  Runs on a background thread
+        /// so the UI stays responsive during the Ollama HTTP call.
         /// </summary>
         private void RunAISearch(string query)
         {
-            try
+            search_btn.Enabled = false;
+            search_btn.Text    = "Searching...";
+
+            string cleanedBase = baseFolderPathString.Replace("\"", "").Trim();
+            string flightsRoot = System.IO.Directory.GetParent(cleanedBase) != null
+                ? System.IO.Directory.GetParent(cleanedBase).FullName
+                : cleanedBase;
+
+            System.ComponentModel.BackgroundWorker worker =
+                new System.ComponentModel.BackgroundWorker();
+
+            worker.DoWork += (s, args) =>
             {
-                // Derive the Flights root from the current baseFolderPathString.
-                // baseFolderPathString is a specific flight folder such as
-                // c:\Travelpass\Flights\VS652_20241215 – going one level up gives
-                // c:\Travelpass\Flights which contains all flights.
-                string cleanedBase = baseFolderPathString
-                    .Replace("\"", "")
-                    .Trim();
-
-                string flightsRoot = System.IO.Directory.GetParent(cleanedBase) != null
-                    ? System.IO.Directory.GetParent(cleanedBase).FullName
-                    : cleanedBase;
-
                 SearchCriteria criteria = AISearchEngine.ParseQuery(query);
-                System.Collections.Generic.List<AISearchResult> results =
-                    AISearchEngine.Search(criteria, flightsRoot);
+                args.Result = AISearchEngine.Search(criteria, flightsRoot);
+            };
+
+            worker.RunWorkerCompleted += (s, args) =>
+            {
+                search_btn.Enabled = true;
+                search_btn.Text    = "Search";
+
+                if (args.Error != null)
+                {
+                    Console.WriteLine("AISearch error: " + args.Error.ToString());
+                    string msg = (args.Error.Message.Contains("Unable to connect") ||
+                                  args.Error.Message.Contains("actively refused") ||
+                                  args.Error.Message.Contains("Connection refused"))
+                        ? "Ollama is not running.\n\nPlease start Ollama and try again."
+                        : "Smart search error: " + args.Error.Message;
+                    MessageBox.Show(msg, "Smart Search Error",
+                        MessageBoxButtons.OK, MessageBoxIcon.Warning,
+                        MessageBoxDefaultButton.Button1,
+                        MessageBoxOptions.RightAlign, false);
+                    return;
+                }
+
+                var results =
+                    (System.Collections.Generic.List<AISearchResult>)args.Result;
 
                 if (results.Count == 0)
                 {
-                    DialogResult dr = MessageBox.Show(
+                    MessageBox.Show(
                         "No records matched your search: \"" + query + "\"",
                         "Smart Search",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Information,
+                        MessageBoxButtons.OK, MessageBoxIcon.Information,
                         MessageBoxDefaultButton.Button1,
-                        MessageBoxOptions.RightAlign,
-                        false);
-
-                    if (dr == DialogResult.OK)
-                        return;
+                        MessageBoxOptions.RightAlign, false);
+                    return;
                 }
 
                 System.Data.DataTable dt = AISearchEngine.ToDataTable(results);
-                ContinueFlightList.table      = dt;
-                recordsDataGrid.DataSource    = dt;
+                ContinueFlightList.table   = dt;
+                recordsDataGrid.DataSource = dt;
                 recordsDataGrid.AutoResizeColumns(
                     System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("AISearch error: " + ex.ToString());
-                MessageBox.Show(
-                    "Smart search encountered an error. Please try a simpler query.",
-                    "Smart Search Error",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning,
-                    MessageBoxDefaultButton.Button1,
-                    MessageBoxOptions.RightAlign,
-                    false);
-            }
+            };
+
+            worker.RunWorkerAsync();
         }
 
 
