@@ -32,6 +32,7 @@
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ContinueFlightList));
             this.flightsDataGrid = new System.Windows.Forms.DataGridView();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.btn_smart_search = new System.Windows.Forms.Button();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.flight_combo = new System.Windows.Forms.ComboBox();
             this.search_btn = new System.Windows.Forms.Button();
@@ -78,6 +79,7 @@
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox1.Controls.Add(this.groupBox2);
+            this.groupBox1.Controls.Add(this.btn_smart_search);
             this.groupBox1.Controls.Add(this.go_to_flight);
             this.groupBox1.Controls.Add(this.flight_date_box);
             this.groupBox1.Controls.Add(this.flight_to_box);
@@ -177,9 +179,21 @@
             this.go_to_flight.Text = "Go to Flight";
             this.go_to_flight.UseVisualStyleBackColor = false;
             this.go_to_flight.Click += new System.EventHandler(this.go_to_flight_Click);
-            // 
+            //
+            // btn_smart_search
+            //
+            this.btn_smart_search.Text      = "Smart Search";
+            this.btn_smart_search.Location  = new System.Drawing.Point(13, 82);
+            this.btn_smart_search.Size      = new System.Drawing.Size(112, 25);
+            this.btn_smart_search.BackColor = System.Drawing.Color.FromArgb(0, 102, 204);
+            this.btn_smart_search.ForeColor = System.Drawing.Color.White;
+            this.btn_smart_search.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn_smart_search.Font      = new System.Drawing.Font("Microsoft Sans Serif", 8.5F, System.Drawing.FontStyle.Bold);
+            this.btn_smart_search.TabIndex  = 28;
+            this.btn_smart_search.Click    += new System.EventHandler(this.btn_smart_search_Click);
+            //
             // flight_date_box
-            // 
+            //
             this.flight_date_box.Location = new System.Drawing.Point(331, 74);
             this.flight_date_box.Name = "flight_date_box";
             this.flight_date_box.Size = new System.Drawing.Size(167, 21);
@@ -326,6 +340,7 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button go_to_flight;
+        private System.Windows.Forms.Button btn_smart_search;
         private System.Windows.Forms.Button search_btn;
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.ComboBox flight_combo;

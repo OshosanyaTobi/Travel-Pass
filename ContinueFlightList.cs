@@ -1118,6 +1118,12 @@ namespace TravelPass
             };
         }
 
+        private void btn_smart_search_Click(object sender, EventArgs e)
+        {
+            SmartSearchForm form = new SmartSearchForm(returnBaseFolderPathString(pers_role_));
+            form.ShowDialog();
+        }
+
         //private string filter_flight_from;
         //public String FilterFlightFrom {
         //    get { return filter_flight_from; }
