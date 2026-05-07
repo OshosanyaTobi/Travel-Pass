@@ -2626,7 +2626,7 @@ namespace TravelPass
                         "Updated by_Name = " + fullname,
                         "Updated by_Email = " + user_email,
                         "Scanned Passport Number = " + mrzScan1.doc_no.Text.ToString(),
-                        /* "Scanned Passport Name = " + passenger_name.Text.ToString(), */ 
+                        /* "Scanned Passport Name = " + passenger_name.Text.ToString(), */
                         "Scanned Passport Name = " + mrzScan1.family_name.Text + " " + mrzScan1.given_names.Text,
                         "Date-Time Updated = " + DateTime.Now.ToString("dd MMM yyyy HH:mm:ss"),
                         "Flight From = " + this.flight_from.Text.ToString(),
@@ -2645,7 +2645,17 @@ namespace TravelPass
                         }
                     }
                 }
-                
+
+                // Auto-update search index so Smart Search reflects new record immediately.
+                try
+                {
+                    string flightsRoot = System.IO.Directory.GetParent(
+                        System.IO.Directory.GetParent(recordsFolderPathString).FullName).FullName;
+                    RecordIndex.AddOrUpdateEntry(recordFolderPathString, flightsRoot);
+                }
+                catch { }
+
+
 
                 if (this.doc_type.Text.ToUpper().Equals("PASSPORT"))
                 {
@@ -3348,6 +3358,14 @@ namespace TravelPass
                     }
                 }
 
+                // Auto-update search index so Smart Search reflects new record immediately.
+                try
+                {
+                    string flightsRoot = System.IO.Directory.GetParent(
+                        System.IO.Directory.GetParent(recordsFolderPathString).FullName).FullName;
+                    RecordIndex.AddOrUpdateEntry(recordFolderPathString, flightsRoot);
+                }
+                catch { }
 
                 if (this.doc_type.Text.ToUpper().Equals("PASSPORT"))
                 {

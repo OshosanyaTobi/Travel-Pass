@@ -100,6 +100,32 @@ namespace TravelPass
         }
 
         /// <summary>
+        /// Sends an image to Ollama llava, extracts document info, and returns
+        /// a SearchCriteria that can be used to search the index.
+        /// Requires the llava model: ollama pull llava
+        /// </summary>
+        public static SearchCriteria ParseImageQuery(string imagePath)
+        {
+            SearchCriteria c = new SearchCriteria { RawQuery = "[image: " + Path.GetFileName(imagePath) + "]" };
+
+            byte[] imageBytes = File.ReadAllBytes(imagePath);
+            string base64Image = Convert.ToBase64String(imageBytes);
+
+            string prompt =
+                "This image shows a passport, visa, or travel document. " +
+                "Extract all readable information and return ONLY a JSON object with these exact fields " +
+                "(use null for any field not visible or readable):\n" +
+                "  nationality      - ISO 3166-1 alpha-3 code (e.g. \"NGA\", \"GBR\") or null\n" +
+                "  documentType     - \"PASSPORT\", \"VISA\", or null\n" +
+                "  nameContains     - surname and given names as a single string or null\n" +
+                "  passportNumber   - document number or null\n" +
+                "Return only the JSON object, nothing else.";
+
+            string ollamaJson = CallOllamaWithImage(prompt, base64Image);
+            return ParseOllamaResponse(ollamaJson, c.RawQuery);
+        }
+
+        /// <summary>
         /// Sends query to Ollama and returns a populated SearchCriteria.
         /// Throws if Ollama is unreachable so the caller can show a message.
         /// </summary>
@@ -230,20 +256,37 @@ namespace TravelPass
 
         private static string CallOllama(string prompt)
         {
-            // Build request JSON manually to avoid any library dependency.
             string requestBody =
                 "{\"model\":\"" + OllamaModel + "\"," +
                 "\"prompt\":\"" + EscapeJsonString(prompt) + "\"," +
                 "\"stream\":false," +
                 "\"format\":\"json\"}";
 
+            return PostToOllama(requestBody, TimeoutMs);
+        }
+
+        // Image variant — uses llava model and embeds a base64 image.
+        private static string CallOllamaWithImage(string prompt, string base64Image)
+        {
+            string requestBody =
+                "{\"model\":\"llava\"," +
+                "\"prompt\":\"" + EscapeJsonString(prompt) + "\"," +
+                "\"images\":[\"" + base64Image + "\"]," +
+                "\"stream\":false," +
+                "\"format\":\"json\"}";
+
+            return PostToOllama(requestBody, 60000); // images take longer
+        }
+
+        private static string PostToOllama(string requestBody, int timeoutMs)
+        {
             byte[] data = Encoding.UTF8.GetBytes(requestBody);
 
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create(OllamaUrl);
             request.Method        = "POST";
             request.ContentType   = "application/json";
             request.ContentLength = data.Length;
-            request.Timeout       = TimeoutMs;
+            request.Timeout       = timeoutMs;
 
             using (Stream s = request.GetRequestStream())
                 s.Write(data, 0, data.Length);

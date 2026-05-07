@@ -49,7 +49,73 @@ namespace TravelPass
         }
 
         // ------------------------------------------------------------------ //
-        //  Search                                                              //
+        //  Image search                                                        //
+        // ------------------------------------------------------------------ //
+
+        private void btn_image_Click(object sender, EventArgs e)
+        {
+            using (OpenFileDialog dlg = new OpenFileDialog())
+            {
+                dlg.Title  = "Select passport or document image";
+                dlg.Filter = "Image files|*.jpg;*.jpeg;*.png;*.bmp|All files|*.*";
+
+                if (dlg.ShowDialog() != DialogResult.OK) return;
+
+                string imagePath = dlg.FileName;
+                lbl_image_name.Text    = System.IO.Path.GetFileName(imagePath);
+                lbl_image_name.Visible = true;
+
+                if (RecordIndex.GetEntries() == null)
+                {
+                    MessageBox.Show(
+                        "Please build the search index first (click 'Rebuild Index').",
+                        "No Index", MessageBoxButtons.OK, MessageBoxIcon.Warning,
+                        MessageBoxDefaultButton.Button1, MessageBoxOptions.RightAlign, false);
+                    return;
+                }
+
+                btn_image.Enabled  = false;
+                btn_search.Enabled = false;
+                UpdateStatus("Analysing image with Ollama llava...");
+
+                BackgroundWorker worker = new BackgroundWorker();
+                worker.DoWork += (s, args) =>
+                {
+                    SearchCriteria criteria = AISearchEngine.ParseImageQuery(imagePath);
+                    args.Result = RecordIndex.Search(criteria);
+                };
+                worker.RunWorkerCompleted += (s, args) =>
+                {
+                    btn_image.Enabled  = true;
+                    btn_search.Enabled = true;
+
+                    if (args.Error != null)
+                    {
+                        string msg =
+                            (args.Error.Message.Contains("Unable to connect") ||
+                             args.Error.Message.Contains("actively refused") ||
+                             args.Error.Message.Contains("Connection refused"))
+                            ? "Ollama is not running.\n\nPlease start Ollama and try again."
+                            : args.Error.Message.Contains("404") || args.Error.Message.Contains("llava")
+                            ? "The llava model is not installed.\n\nRun:  ollama pull llava"
+                            : "Image search error: " + args.Error.Message;
+                        MessageBox.Show(msg, "Image Search Error", MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1,
+                            MessageBoxOptions.RightAlign, false);
+                        UpdateStatus("Image search failed.");
+                        return;
+                    }
+
+                    List<IndexEntry> results = (List<IndexEntry>)args.Result;
+                    UpdateStatus(results.Count + " result(s) found for image.");
+                    BindResults(results);
+                };
+                worker.RunWorkerAsync();
+            }
+        }
+
+        // ------------------------------------------------------------------ //
+        //  Text search                                                         //
         // ------------------------------------------------------------------ //
 
         private void btn_search_Click(object sender, EventArgs e)

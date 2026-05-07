@@ -16,6 +16,8 @@ namespace TravelPass
             this.pnl_top      = new System.Windows.Forms.Panel();
             this.lbl_hint     = new System.Windows.Forms.Label();
             this.txt_search   = new System.Windows.Forms.TextBox();
+            this.btn_image    = new System.Windows.Forms.Button();
+            this.lbl_image_name = new System.Windows.Forms.Label();
             this.btn_search   = new System.Windows.Forms.Button();
             this.resultsGrid  = new System.Windows.Forms.DataGridView();
             this.pnl_bottom   = new System.Windows.Forms.Panel();
@@ -30,9 +32,11 @@ namespace TravelPass
 
             // ── pnl_top ──────────────────────────────────────────────────── //
             this.pnl_top.Dock = System.Windows.Forms.DockStyle.Top;
-            this.pnl_top.Height = 72;
+            this.pnl_top.Height = 100;
             this.pnl_top.Controls.Add(this.lbl_hint);
             this.pnl_top.Controls.Add(this.txt_search);
+            this.pnl_top.Controls.Add(this.btn_image);
+            this.pnl_top.Controls.Add(this.lbl_image_name);
             this.pnl_top.Controls.Add(this.btn_search);
 
             // lbl_hint
@@ -44,14 +48,14 @@ namespace TravelPass
                 System.Drawing.FontStyle.Italic);
             this.lbl_hint.ForeColor = System.Drawing.Color.Gray;
 
-            // txt_search
+            // txt_search (row 1)
             this.txt_search.Location = new System.Drawing.Point(10, 30);
             this.txt_search.Size     = new System.Drawing.Size(740, 23);
             this.txt_search.Font     = new System.Drawing.Font("Microsoft Sans Serif", 10F);
             this.txt_search.TabIndex = 0;
             this.txt_search.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txt_search_KeyDown);
 
-            // btn_search
+            // btn_search (row 1)
             this.btn_search.Text      = "Search";
             this.btn_search.Location  = new System.Drawing.Point(758, 28);
             this.btn_search.Size      = new System.Drawing.Size(100, 27);
@@ -62,6 +66,25 @@ namespace TravelPass
             this.btn_search.Font      = new System.Drawing.Font("Microsoft Sans Serif", 9F,
                 System.Drawing.FontStyle.Bold);
             this.btn_search.Click    += new System.EventHandler(this.btn_search_Click);
+
+            // btn_image (row 2) — search by passport photo
+            this.btn_image.Text      = "Search by Image";
+            this.btn_image.Location  = new System.Drawing.Point(10, 62);
+            this.btn_image.Size      = new System.Drawing.Size(130, 27);
+            this.btn_image.TabIndex  = 2;
+            this.btn_image.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn_image.Font      = new System.Drawing.Font("Microsoft Sans Serif", 8.5F);
+            this.btn_image.Click    += new System.EventHandler(this.btn_image_Click);
+
+            // lbl_image_name — shows selected file name
+            this.lbl_image_name.AutoSize  = false;
+            this.lbl_image_name.Location  = new System.Drawing.Point(148, 67);
+            this.lbl_image_name.Size      = new System.Drawing.Size(600, 16);
+            this.lbl_image_name.Font      = new System.Drawing.Font("Microsoft Sans Serif", 8F,
+                System.Drawing.FontStyle.Italic);
+            this.lbl_image_name.ForeColor = System.Drawing.Color.FromArgb(0, 102, 204);
+            this.lbl_image_name.Text      = "";
+            this.lbl_image_name.Visible   = false;
 
             // ── resultsGrid ───────────────────────────────────────────────── //
             this.resultsGrid.AllowUserToAddRows    = false;
@@ -142,6 +165,8 @@ namespace TravelPass
         private System.Windows.Forms.Panel         pnl_top;
         private System.Windows.Forms.Label         lbl_hint;
         private System.Windows.Forms.TextBox       txt_search;
+        private System.Windows.Forms.Button        btn_image;
+        private System.Windows.Forms.Label         lbl_image_name;
         private System.Windows.Forms.Button        btn_search;
         private System.Windows.Forms.DataGridView  resultsGrid;
         private System.Windows.Forms.Panel         pnl_bottom;

@@ -124,6 +124,32 @@ namespace TravelPass
             Save(flightsRoot);
         }
 
+        // Add or update a single record entry without a full rebuild.
+        // Called automatically each time AddRecord saves a new scan.
+        public static void AddOrUpdateEntry(string recordDir, string flightsRoot)
+        {
+            if (_entries == null)
+            {
+                bool loaded = Load(flightsRoot);
+                if (!loaded) _entries = new List<IndexEntry>();
+            }
+
+            // Remove any existing entry for this folder so we don't duplicate.
+            string normalized = recordDir.Trim();
+            _entries.RemoveAll(e =>
+                string.Equals(e.RecordFolderPath, normalized,
+                    StringComparison.OrdinalIgnoreCase));
+
+            IndexEntry entry = ReadEntry(normalized);
+            if (entry != null)
+            {
+                _entries.Add(entry);
+                LastBuilt   = DateTime.Now;
+                RecordCount = _entries.Count;
+                Save(flightsRoot);
+            }
+        }
+
         // Save the in-memory index to disk.
         public static void Save(string flightsRoot)
         {
